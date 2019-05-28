@@ -1,12 +1,33 @@
-from flask import render_template
+import json
+import urllib.parse
+
+import requests
+
+from credentials import client_id, client_secret, redirect_uri
+from flask import redirect, render_template, request
 from FlaskApp import app
 
+
+scope = ''
+
+
 @app.route('/')
-@app.route('/index')
-def hello():
-    user = {'username': 'Calvin Cool'}
-    posts = [
-        {'author': {'username': 'John'}, 'body': 'Beautiful day in Portland!'},
-        {'author': {'username': 'Susan'}, 'body': 'The Avengers movie was so cool!'}
-    ]
-    return render_template('index.html', title='Home', user=user, posts=posts)
+def index():
+    title = 'Calvin Bochulak - Home'
+    return render_template('index.html', title=title)
+
+
+@app.route('/authorize', methods=['GET'])
+def authorize():
+    authorize_endpoint = 'https://accounts.spotify.com/authorize'
+    params = {
+        'client_id': client_id,
+        'response_type': 'code',
+        'redirect_uri': redirect_uri,
+        'show_dialog': True}
+    
+    code = request.values.get('code')
+    if code:
+        return redirect('/')
+    else:
+        return redirect(authorize_endpoint + '?' + urllib.parse.urlencode(params))

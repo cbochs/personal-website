@@ -1,0 +1,33 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.content {
+  height: 100vh;
+  background-image: url('/static/img/background.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn {
+  margin: 0;
+  padding: 1rem 2rem;
+  background-color: transparent;
+  cursor: pointer;
+  border: 1px solid white;
+  border-radius: 3px;
+  color: white;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-size: 2rem;
+  text-decoration: none;
+}
+
+.btn:hover, .btn:focus {
+  background: rgba(255, 255, 255, 0.1);
+}
