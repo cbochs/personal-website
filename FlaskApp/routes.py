@@ -19,9 +19,9 @@ def index():
 
 @app.route('/authorize', methods=['GET'])
 def authorize():
-    
     oauth = SpotifyOAuth(client_id, client_secret, redirect_uri)
     code = request.values.get('code')
+    
     if code:
         token = oauth.request_access_token(code)
         sp = Spotify(token['access_token'])
