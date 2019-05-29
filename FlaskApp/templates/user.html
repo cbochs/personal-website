@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="content">
-  <div class="overhead">
-    <p class="user">{{ display_name }}</p>
+<header>
+  <p>{{ display_name }}</p>
+</header>
+<section>
+  <div class="container">
+    <button class="btn" id="btn-playlists">Load Playlists</button>
+    <div class="playlist-container hidden" id="ul-playlists">
+      <ul></ul>
+    </div>
   </div>
-  <div class="info">
-    <button class="btn show">Load Playlists</button>
-  </div>
-</div>
+</section>
 {% endblock %}

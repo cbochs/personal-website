@@ -15,10 +15,7 @@ def setup_user(token_info):
         'display_name': me['display_name'],
         **token_info}
     
-    try:
-        mongo.db.users.insert_one(user)
-    except DuplicateKeyError as e:
-        pass
+    mongo.db.users.replace_one({'user_id': user['user_id']}, user, upsert=True)
 
     return user
 

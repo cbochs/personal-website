@@ -7,7 +7,7 @@ from FlaskApp.mongo import setup_user, find_user
 import json
 from FlaskApp.jsonencoder import JSONEncoder
 
-scope = 'user-read-private playlist-read-private playlist-read-collaborative'
+scope = 'playlist-read-private playlist-read-collaborative'
 
 
 @app.route('/')
