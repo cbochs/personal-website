@@ -1,11 +1,12 @@
+import json
+
 from flask import redirect, render_template, request, url_for
 from FlaskApp import app
-from FlaskApp.credentials import *
-from FlaskApp.spotify_api import SpotifyOAuth
-from FlaskApp.mongo import setup_user, find_user
-
-import json
+from FlaskApp.credentials import (CLIENT_ID, CLIENT_SECRET, LOCAL_IP,
+                                  LOCAL_REDIRECT, REDIRECT_URI)
 from FlaskApp.jsonencoder import JSONEncoder
+from FlaskApp.mongo import find_user, setup_user
+from FlaskApp.spotify_api import SpotifyOAuth
 
 scope = 'playlist-read-private playlist-read-collaborative'
 
@@ -18,14 +19,15 @@ def index():
 
 @app.route('/authorize', methods=['GET'])
 def authorize():
-    oauth = SpotifyOAuth(client_id, client_secret, redirect_uri)
+    redirect_uri = REDIRECT_URI if LOCAL_IP not in request.base_url else LOCAL_REDIRECT
+    oauth = SpotifyOAuth(CLIENT_ID, CLIENT_SECRET, redirect_uri)
     code = request.values.get('code')
     
     if code:
         token_info = oauth.request_access_token(code)
         user = setup_user(token_info)
 
-        return redirect(url_for('user', display_name=user['display_name']))
+        return redirect(url_for('user', display_name=user['user_id']))
     else:
         url = oauth.get_authorization_url(scope)
         return redirect(url)

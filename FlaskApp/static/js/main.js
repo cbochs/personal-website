@@ -35,7 +35,11 @@ function split_url(url) {
 
 async function clickLoadPlaylists(event) {
     event.preventDefault();
-    let response = await fetch('http://www.imsignificant.com/access_token?user_id=notbobbobby');
+
+    const user_id = document.querySelector('#user-id').innerHTML;
+    console.log(user_id);
+
+    let response = await fetch(`http://www.imsignificant.com:8080/access_token?user_id=${user_id}`);
     let result = await response.json();
     let playlists = await(getPlaylists(result.access_token));
 
