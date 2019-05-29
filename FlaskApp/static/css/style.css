@@ -13,6 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .btn {
@@ -26,19 +27,27 @@
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   font-size: 2rem;
   text-decoration: none;
+  outline: none;
 }
 
 .btn:hover, .btn:focus {
   background: rgba(255, 255, 255, 0.1);
 }
 
-p {
-  margin: 0;
-  padding: 1rem 2rem;
+.overhead {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+}
+
+.user {
+  margin: 1rem;
+  padding: 1rem;
   background-color: transparent;
-  border: 1px solid white;
   border-radius: 3px;
   color: white;
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  font-size: 2rem;
+  font-size: 1.5rem;
 }

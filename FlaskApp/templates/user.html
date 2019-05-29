@@ -2,6 +2,11 @@
 
 {% block content %}
 <div class="content">
-  <p>{{ display_name }}</p>
+  <div class="overhead">
+    <p class="user">{{ display_name }}</p>
+  </div>
+  <div class="info">
+    <button class="btn show">Load Playlists</button>
+  </div>
 </div>
 {% endblock %}
