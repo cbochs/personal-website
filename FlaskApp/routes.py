@@ -3,12 +3,12 @@ import urllib.parse
 
 import requests
 
-from credentials import client_id, client_secret, redirect_uri
 from flask import redirect, render_template, request
 from FlaskApp import app
+from FlaskApp.credentials import *
+from FlaskApp.spotify_api import SpotifyOAuth
 
-
-scope = ''
+scope = 'user-read-private playlist-read-private'
 
 
 @app.route('/')
@@ -19,15 +19,12 @@ def index():
 
 @app.route('/authorize', methods=['GET'])
 def authorize():
-    authorize_endpoint = 'https://accounts.spotify.com/authorize'
-    params = {
-        'client_id': client_id,
-        'response_type': 'code',
-        'redirect_uri': redirect_uri,
-        'show_dialog': True}
     
+    oauth = SpotifyOAuth(client_id, client_secret, redirect_uri)
     code = request.values.get('code')
     if code:
-        return redirect('/')
+        token = oauth.request_access_token(code)
+        return json.dumps(token)
     else:
-        return redirect(authorize_endpoint + '?' + urllib.parse.urlencode(params))
+        url = oauth.get_authorization_url(scope)
+        return redirect(url)

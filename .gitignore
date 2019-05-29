@@ -1,4 +1,6 @@
-venv
 flaskapp.wsgi
+credentials.py
+
+venv
 
 netflix_lookalike
