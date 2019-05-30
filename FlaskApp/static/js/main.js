@@ -1,4 +1,6 @@
-let access_token;
+const clickEventType = 'ontouchend' in document ? 'touchstart' : 'click';
+const ulPlaylists = document.querySelector('#ul-playlists');
+const btnLoadPlaylists = document.querySelector('#btn-playlists');
 
 function getQueryString(params) {
     const esc = encodeURIComponent;
@@ -36,10 +38,16 @@ function split_url(url) {
 async function clickLoadPlaylists(event) {
     event.preventDefault();
 
-    const user_id = document.querySelector('#user-id').innerHTML;
+    const user_id = document.querySelector('#logo').innerHTML;
     console.log(user_id);
 
-    let response = await fetch(`http://www.imsignificant.com:8080/access_token?user_id=${user_id}`);
+    let url = 'http://www.imsignificant.com:8080';
+    if (window.location.origin.includes('192.168.1.222')) {
+        url = 'http://192.168.1.222';
+    }
+    console.log(url);
+
+    let response = await fetch(`${url}/access_token?user_id=${user_id}`);
     let result = await response.json();
     let playlists = await(getPlaylists(result.access_token));
 
@@ -71,8 +79,4 @@ async function getPlaylists(access_token) {
 
     return playlists.map(p => p.name);
 }
-
-const clickEventType = 'ontouchend' in document ? 'touchstart' : 'click';
-const ulPlaylists = document.querySelector('#ul-playlists');
-const btnLoadPlaylists = document.querySelector('#btn-playlists');
 btnLoadPlaylists.addEventListener(clickEventType, clickLoadPlaylists);

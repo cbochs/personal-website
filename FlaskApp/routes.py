@@ -9,12 +9,19 @@ from FlaskApp.mongo import find_user, setup_user
 from FlaskApp.spotify_api import SpotifyOAuth
 
 scope = 'playlist-read-private playlist-read-collaborative'
+logo = 'imsignificant!'
 
 
 @app.route('/')
 def index():
-    title = 'Calvin Bochulak - Home'
-    return render_template('index.html', title=title)
+    title = 'imsignificant! - Home'
+    return render_template('index.html', title=title, logo=logo)
+
+
+@app.route('/myspotify')
+def myspotify():
+    title = 'imsignificant! - MySpotify'
+    return render_template('myspotify.html', title=title, logo=logo)
 
 
 @app.route('/authorize', methods=['GET'])
@@ -42,5 +49,6 @@ def access_token():
 
 @app.route('/user')
 def user():
+    title = 'imsignificant! - MySpotify'
     display_name = request.args.get('display_name')
-    return render_template('user.html', display_name=display_name)
+    return render_template('user.html', title=title, logo=display_name)

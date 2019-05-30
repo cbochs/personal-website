@@ -1,54 +1,78 @@
 *, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  box-sizing: 0;
 }
 
 body {
+  margin: 0;
   width: 100vw;
   height: 100vh;
   background-color: black;
-  background-image: url('/static/img/background.png');
+  background-image: url('../img/background.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-}
-
-header {
-  width: 100%;
-}
-
-header p {
-  padding: 1rem;
-  background-color: transparent;
-  border-radius: 3px;
+  font-family: 'Montserrat', sans-serif;
   color: white;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  font-size: 1.5rem;
 }
 
 .container {
-  height: 60vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  height: 100%;
+}
+
+section {
+  width: 100%;
+  flex-grow: 1;
+}
+
+section a {
+  color: white;
+  text-decoration: none;
+  font-size: 2rem;
+  text-transform: lowercase;
+  padding: 1rem 2rem;
+  border: 1px solid white;
+  border-radius: 3px;
+}
+
+section a:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.centered {
+  display: flex;
   justify-content: center;
+  align-items: center;
+}
+
+p {
+  padding: 0;
+  margin-top: 0.5rem;
+  margin-left: 1rem;
+}
+
+.switch-on {
+  color: rgb(0, 255, 0);
+  font-weight: 800;
+}
+
+.switch-off {
+  color: red;
+  font-weight: 800;
 }
 
 .btn {
-  padding: 1rem 2rem;
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
   background-color: transparent;
   cursor: pointer;
   border: 1px solid white;
   border-radius: 3px;
   color: white;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  font-size: 2rem;
+  font-size: 1rem;
   text-decoration: none;
   outline: none;
-}
-
-.hidden {
-  display: none;
 }
 
 .btn:hover, .btn:focus {
@@ -57,7 +81,7 @@ header p {
 
 .playlist-container {
   margin: 2rem;
-  height: 100%;
+  height: 40vh;
   overflow-x: hidden;
   overflow-y: auto;
   white-space: nowrap;

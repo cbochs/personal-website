@@ -5,13 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/nav-style.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/switch-style.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/loading.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/loading-btn.css') }}">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
   
   <title>{{ title }}</title>
 
 </head>
 <body>
-  {% block content %} {% endblock %}
+  <header>
+    <h1 class="logo" id="logo">{{ logo }}</h1>
+    <input type="checkbox" class="nav-toggle" id="nav-toggle">
+    <label for="nav-toggle" class="nav-toggle-label">
+      <span></span>
+    </label>
+    <nav>
+      <ul>
+        <li><a href="/">home</a></li>
+        <li><a href="/myspotify">my spotify</a></li>
+        <li><a href="#">other</a></li>
+      </ul>
+    </nav>
+  </header>
+  <div class="container">
+    <div class="spacer"></div>
+    {% block content %} {% endblock %}
+  </div>
 
   <script type="text/javascript" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
