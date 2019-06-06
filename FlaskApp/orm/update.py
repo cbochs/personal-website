@@ -12,7 +12,14 @@ def create_user(token_info):
     sp = Spotify(token_info['access_token'])
     user = format_user(sp.me(), token_info)
 
+    if not document_exists(mongo.db.users, {'id': user['id']}, {'id': 1}):
+        mongo.db.users.insert_one(user)
+
     return user
+
+
+def find_user(id):
+    return mongo.db.users.find_one({'id': id})
 
 
 def is_token_expired(token_info):
@@ -27,7 +34,7 @@ def update_token_info(user):
         token_info = user['token_info']
 
     user['token_info'] = token_info
-    mongo.db.test.update_one({'id': user['id']}, {'$set': user})
+    mongo.db.users.update_one({'id': user['id']}, {'$set': user})
 
     return user
 
@@ -57,7 +64,7 @@ def update_recently_played(user):
 
 
 def update_artists(artists):
-    user = mongo.db.test.find_one({'id': 'notbobbobby'})
+    user = mongo.db.users.find_one({'id': 'notbobbobby'})
     user = update_token_info(user)
 
     unique_filter = lambda id: not document_exists(mongo.db.artists, {'id': id}, {'id': 1})
@@ -84,7 +91,7 @@ def update_artists(artists):
 
 
 def update_albums(albums):
-    user = mongo.db.test.find_one({'id': 'notbobbobby'})
+    user = mongo.db.users.find_one({'id': 'notbobbobby'})
     user = update_token_info(user)
 
     unique_filter = lambda id: not document_exists(mongo.db.albums, {'id': id}, {'id': 1})
@@ -110,7 +117,7 @@ def update_albums(albums):
 
 
 def update_tracks(tracks):
-    user = mongo.db.test.find_one({'id': 'notbobbobby'})
+    user = mongo.db.users.find_one({'id': 'notbobbobby'})
     user = update_token_info(user)
 
     unique_filter = lambda id: not document_exists(mongo.db.tracks, {'id': id}, {'id': 1})

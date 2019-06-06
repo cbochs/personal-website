@@ -3,7 +3,7 @@ import json
 from flask import redirect, render_template, request, url_for
 from FlaskApp import app, oauth
 from FlaskApp.jsonencoder import JSONEncoder
-from FlaskApp.mongo import find_user, setup_user
+from FlaskApp.orm.update import create_user, find_user
 
 scope = ','.join(['playlist-read-private',
                   'playlist-read-collaborative',
@@ -32,9 +32,9 @@ def authorize():
     
     if code:
         token_info = oauth.request_access_token(code)
-        user = setup_user(token_info)
+        user = create_user(token_info)
 
-        return redirect(url_for('user', display_name=user['user_id']))
+        return redirect(url_for('user', display_name=user['id']))
     else:
         url = oauth.get_authorization_url(scope)
         return redirect(url)
