@@ -1,5 +1,13 @@
 
 
+def format_basic_user(result):
+    user = {
+        'id': result['id'],
+        'type': result['type']}
+
+    return user
+
+
 def format_simple_user(result):
     user = {
         'display_name': result['display_name'],

@@ -2,8 +2,6 @@ import json
 
 from flask import redirect, render_template, request, url_for
 from FlaskApp import app, oauth
-from FlaskApp.jsonencoder import JSONEncoder
-from FlaskApp.orm.update import create_user, find_user
 
 scope = ','.join(['playlist-read-private',
                   'playlist-read-collaborative',
@@ -11,10 +9,12 @@ scope = ','.join(['playlist-read-private',
                   'playlist-modify-private',
                   'user-library-read',
                   'user-read-recently-played'])
+
 logo = 'imsignificant!'
 
 
 @app.route('/')
+@app.route('/index')
 def index():
     title = 'imsignificant! - Home'
     return render_template('index.html', title=title, logo=logo)
@@ -40,15 +40,14 @@ def authorize():
         return redirect(url)
 
 
-@app.route('/access_token')
-def access_token():
-    user_id = request.values.get('user_id')
-    user = find_user(user_id)
-    return json.dumps(user, cls=JSONEncoder), 200
-
-
 @app.route('/user')
 def user():
     title = 'imsignificant! - MySpotify'
     display_name = request.args.get('display_name')
     return render_template('user.html', title=title, logo=display_name)
+
+
+@app.route('/test')
+def test():
+    title = 'imsignificant! - Test'
+    return render_template('test.html', title=title, logo=logo, items='no')

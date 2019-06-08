@@ -1,16 +1,11 @@
-from time import time
-from datetime import datetime, timedelta
-from urllib.parse import urlencode
+import os
 
 import requests
-import os
+
+from FlaskApp.spotify.api_helper import handle_bulk, handle_cursor
 
 
 class SpotifyException(BaseException):
-    pass
-
-
-class SpotifyOAuthException(BaseException):
     pass
 
 
@@ -18,34 +13,61 @@ class Spotify(object):
 
     API_URL = 'https://api.spotify.com/v1/'
 
-    def __init__(self, access_token, token_type='Bearer'):
-        self.access_token = access_token
-        self.token_type = token_type
+    def __init__(self, token_info):
+        self.token_info = token_info
 
     
-    def me(self, *args, **kwargs):
-        return self._get('me', *args, **kwargs)
+    def me(self, **kwargs):
+        return self._get('me', **kwargs)
+
+
+    @handle_cursor(limit=50)
+    def recently_played(self, **kwargs):
+        return self._get('me/player/recently-played', **kwargs)
 
     
-    def recently_played(self, *args, **kwargs):
-        return self._get('me/player/recently-played', *args, **kwargs)
+    @handle_cursor(limit=50)
+    def my_playlists(self, **kwargs):
+        return self._get('me/playlists', **kwargs)
 
     
-    def albums(self, *args, **kwargs):
-        return self._get('albums', *args, **kwargs)
-
-    
-    def artists(self, *args, **kwargs):
-        return self._get('artists', *args, **kwargs)
-
-    
-    def tracks(self, *args, **kwargs):
-        return self._get('tracks', *args, **kwargs)
+    @handle_cursor(limit=50)
+    def my_tracks(self, **kwargs):
+        return self._get('me/tracks', **kwargs)
 
 
-    def _get(self, endpoint, *args, **kwargs):
-        url = os.path.join(self.API_URL, endpoint)
-        headers = {'Authorization': f'{self.token_type} {self.access_token}'}
+    @handle_bulk(limit=20)
+    def albums(self, **kwargs):
+        return self._get('albums', **kwargs)
+
+
+    @handle_bulk(limit=50)
+    def artists(self, **kwargs):
+        return self._get('artists', **kwargs)
+
+
+    @handle_bulk(limit=100)
+    def tracks(self, **kwargs):
+        return self._get('tracks', **kwargs)
+
+
+    @handle_cursor('tracks')
+    def playlist(self, id, **kwargs):
+        return self._get(f'playlists/{id}', **kwargs)
+
+
+    @handle_cursor(limit=100)
+    def playlist_tracks(self, id, **kwargs):
+        return self._get(f'playlists/{id}/tracks', **kwargs)
+
+
+    def _next(self, result):
+        return self._get(result['next']) if result['next'] else None
+
+
+    def _get(self, endpoint, **kwargs):
+        url = endpoint if self.API_URL in endpoint else os.path.join(self.API_URL, endpoint)
+        headers = self._headers()
         
         response = requests.get(url, headers=headers, params=kwargs)
 
@@ -55,75 +77,10 @@ class Spotify(object):
 
         return response.json()
 
-
-class SpotifyOAuth(object):
-
-    OAUTH_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize'
-    OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
-
-    def __init__(self, client_id, client_secret, redirect_uri):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.redirect_uri = redirect_uri
-
-
-    def get_authorization_url(self, scope=''):
-        params = {
-            'client_id': self.client_id,
-            'response_type': 'code',
-            'redirect_uri': self.redirect_uri,
-            'scope': scope}
-
-        return self.OAUTH_AUTHORIZE_URL + '?' + urlencode(params)
-
     
-    def request_access_token(self, code):
-        data = {
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': self.redirect_uri}
-        # headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-        response = requests.post(self.OAUTH_TOKEN_URL, data=data)
-
-        if response.status_code != 200:
-            raise SpotifyOAuthException()
-
-        token_info = response.json()
-        token_info = self._add_expiry_time(token_info)
-
-        return token_info
-
-    
-    def refresh_access_token(self, token_info):
-        data = {
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
-            'grant_type': 'refresh_token',
-            'refresh_token': token_info['refresh_token']}
-        # headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-        response = requests.post(self.OAUTH_TOKEN_URL, data=data)
-
-        if response.status_code != 200:
-            raise SpotifyOAuthException()
-
-        # keep old token in case no new token provided
-        refresh_token = token_info['refresh_token']
-
-        token_info = response.json()
-        token_info = self._add_expiry_time(token_info)
-
-        if 'refresh_token' not in token_info:
-            token_info['refresh_token'] = refresh_token
-        
-        return token_info
-
-
-    def _add_expiry_time(self, token_info):
-        dt = datetime.utcnow() + timedelta(seconds=token_info['expires_in'])
-        token_info['expires_dt'] = dt
-        token_info['expires_at'] = int(dt.timestamp())
-        return token_info
+    def _headers(self):
+        token_type = self.token_info['token_type']
+        access_token = self.token_info['access_token']
+        headers = {'Authorization': f'{token_type} {access_token}',
+                   'Content-Type': 'application/json'} 
+        return headers

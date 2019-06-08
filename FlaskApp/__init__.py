@@ -1,18 +1,19 @@
 from flask import Flask
+from flask_apscheduler import APScheduler
 from flask_pymongo import PyMongo
+
+from FlaskApp.jsonencoder import JSONEncoder
+from FlaskApp.spotify.oauth import SpotifyOAuth
 
 app = Flask(__name__)
 app.config.from_envvar('FLASK_CFG')
+app.json_encoder = JSONEncoder
 
 mongo = PyMongo(app)
 
-from FlaskApp.spotify.api import SpotifyOAuth
-from FlaskApp.credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-oauth = SpotifyOAuth(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+scheduler = APScheduler(app=app)
+scheduler.start()
 
-
-from FlaskApp.jsonencoder import JSONEncoder
-app.json_encoder = JSONEncoder
-
+oauth = SpotifyOAuth(app)
 
 from FlaskApp import routes
