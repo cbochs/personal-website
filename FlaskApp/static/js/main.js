@@ -35,6 +35,25 @@ function split_url(url) {
     return { url, data }
 }
 
+function toggleActive(event) {
+    event.preventDefault();
+
+    const user_id = document.querySelector('#logo').innerHTML;
+    if (event.target.innerHTML == 'on') {
+        event.target.classList.remove('switch-on')
+        event.target.classList.add('switch-off')
+        event.target.innerHTML = 'off'
+    } else {
+        event.target.classList.remove('switch-off')
+        event.target.classList.add('switch-on')
+        event.target.innerHTML = 'on'
+    }
+
+    console.log(event.target.id);
+}
+document.querySelector('#recently_played').addEventListener(clickEventType, toggleActive);
+document.querySelector('#playlist_monitor').addEventListener(clickEventType, toggleActive);
+
 async function clickLoadPlaylists(event) {
     event.preventDefault();
 

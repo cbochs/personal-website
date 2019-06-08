@@ -52,14 +52,24 @@ p {
   margin-left: 1rem;
 }
 
+.switch-on, .switch-off {
+  font-size: 1rem;
+  padding: 0rem;
+  border: none;
+  user-select: none;
+  font-weight: 800;
+}
+
+.switch-on:hover, .switch-off:hover {
+  cursor: pointer;
+}
+
 .switch-on {
   color: rgb(0, 255, 0);
-  font-weight: 800;
 }
 
 .switch-off {
   color: red;
-  font-weight: 800;
 }
 
 .btn {

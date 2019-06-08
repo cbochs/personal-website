@@ -73,7 +73,7 @@ class Spotify(object):
 
         if response.status_code != 200:
             print(response.json())
-            raise SpotifyException()
+            raise SpotifyException(response.reason)
 
         return response.json()
 

@@ -57,7 +57,8 @@ class SpotifyOAuth(object):
         response = requests.post(self.OAUTH_TOKEN_URL, data=data)
 
         if response.status_code != 200:
-            raise SpotifyOAuthException()
+            print(response.json())
+            raise SpotifyOAuthException(response.reason)
 
         token_info = response.json()
         token_info = self._add_expiry_time(token_info)
