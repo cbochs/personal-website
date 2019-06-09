@@ -4,9 +4,10 @@ from FlaskApp import mongo
 
 
 def find_user(user_id):
-    return update_user(mongo.db.users.find_one({'user_info.id': user_id}))
+    user = mongo.db.users.find_one({'user.id': user_id})
+    return update_user(user) if user else None
 
 
 def find_playlist(playlist_id):
-    return mongo.db.users.find_one({'id': playlist_id})
+    return mongo.db.playlists.find_one({'playlist.id': playlist_id})
  

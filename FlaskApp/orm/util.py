@@ -24,7 +24,7 @@ def update_token_info(token_info):
 def update_user(user):
     user['token_info'] = update_token_info(user['token_info'])
     mongo.db.users.update_one(
-        {'user_info.id': user['user_info']['id']},
-        {'$set': user})
+        {'user.id': user['user']['id']},
+        {'$set': {'token_info': user['token_info']}})
 
     return user

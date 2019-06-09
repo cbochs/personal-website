@@ -1,25 +1,13 @@
-from functools import reduce
 from datetime import datetime
+from functools import reduce
+
+from pymongo.errors import DuplicateKeyError, WriteError
 
 from FlaskApp import mongo, scheduler
 from FlaskApp.orm.fetch import *
-from FlaskApp.orm.find import find_user
+from FlaskApp.orm.find import find_playlist
 from FlaskApp.orm.util import document_exists
-from pymongo.errors import DuplicateKeyError
-from FlaskApp.formatter.datetime import to_datetime, from_datetime
-
-
-def update_jobs():
-    # temporary fix because when the server restarts idk what to do...
-    mongo.db.jobs.remove({})
-    users = [user for user in mongo.db.users.find({})]
-    for user in users:
-        user_id = user['user_info']['id']
-
-        scheduler.add_job(
-            f'recently_played_{user_id}',
-            update_recently_played, args=[user_id],
-            trigger='cron', minute=0, hour='*/2')
+from FlaskApp.orm.create import create_playlist
 
 
 def update_recently_played(user_id):
@@ -33,19 +21,55 @@ def update_recently_played(user_id):
             mongo.db.recently_played.insert(recently_played)
         except DuplicateKeyError as e:
             print('ATTEMPTED TO INSERT DUPLICATE PLAY HISTORY')
-    else:
-        print('NO RECENT SONGS LISTENED TO')
 
     mongo.db.users.update_one(
-        {'user_info.id': user_id},
-        {'$set': {'recently_played.last_checked': datetime.utcnow()}})
+        {'user.id': user_id},
+        {'$currentDate': {'recently_played.last_checked': True}})
     
     update_tracks([ph['track'] for ph in recently_played])
 
-    print('----- FINISHED RECENTLY PLAYED -----')
-    
     return recently_played
 
+
+def update_playlist(playlist_id):
+    print(f'----- UPDATING PLAYLIST {playlist_id} -----')
+
+    db_playlist = find_playlist(playlist_id)
+
+    if db_playlist is None:
+        db_playlist = create_playlist(playlist_id)
+        playlist = db_playlist['playlist']
+    else:
+        playlist = fetch_playlist(playlist_id)
+
+    if any([db_playlist['playlist'][k] != playlist[k] for k in playlist.keys()]):
+        time = datetime.utcnow()
+
+        old_playlist = {
+            'modified_at': time,
+            'playlist': db_playlist['playlist']}
+
+        created_at = db_playlist['created_at']
+        if created_at is None and len(playlist['tracks']) > 0:
+            created_at = min([track['added_at'] for track in playlist['tracks']])
+
+        update = {
+            '$addToSet': {'history': old_playlist},
+            '$set': {
+                'playlist': playlist,
+                'last_modified': time,
+                'created_at': created_at},
+            '$currentDate': {'last_checked': True}}
+    else:
+        update = {
+            '$currentDate': {'last_checked': True}}
+    
+    mongo.db.playlists.update_one({'playlist.id': playlist_id}, update)
+
+    update_tracks([pt['track'] for pt in playlist['tracks']])
+
+    return find_playlist(playlist_id)
+    
 
 def update_albums(albums):
     album_ids = list(set(filter(

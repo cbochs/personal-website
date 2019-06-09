@@ -1,7 +1,6 @@
 flaskapp.cfg
-flaskapp.wsgi
-credentials.py
-
 venv
 
-netflix_lookalike
+run.py
+.vscode
+__pycache__

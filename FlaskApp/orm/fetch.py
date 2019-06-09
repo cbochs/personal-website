@@ -21,7 +21,14 @@ def fetch_recently_played(user_id):
     sp = Spotify(user['token_info'])
 
     return format_all(sp.recently_played(no_cursor=True),
-                      format_play_history, user=user['user_info'])
+                      format_play_history, user=user['user'])
+
+
+def fetch_playlist(playlist_id):
+    user = find_user('notbobbobby')
+    sp = Spotify(user['token_info'])
+
+    return format_playlist(sp.playlist(playlist_id, no_cursor=True))
 
 
 def fetch_albums(album_ids):
@@ -43,10 +50,3 @@ def fetch_tracks(track_ids, limit=50):
     sp = Spotify(user['token_info'])
 
     return format_all(sp.tracks(ids=track_ids), format_track)
-
-
-def fetch_playlist(playlist_id):
-    user = find_user('notbobbobby')
-    sp = Spotify(user['token_info'])
-
-    return format_playlist(sp.playlist(playlist_id, no_cursor=True))

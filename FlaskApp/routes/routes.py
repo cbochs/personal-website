@@ -1,10 +1,11 @@
 import json
 
 from flask import redirect, render_template, request, url_for
-from FlaskApp import app, oauth, scheduler
+
+from FlaskApp import app, mongo, oauth, scheduler
 from FlaskApp.orm.create import create_user
-from FlaskApp.orm.find import find_user
-from FlaskApp.orm.update import update_jobs
+from FlaskApp.orm.find import find_user, find_playlist
+from FlaskApp.orm.jobs import schedule_recently_played, update_jobs
 from FlaskApp.spotify.oauth import SpotifyOAuth
 
 scope = ','.join(['playlist-read-private',
@@ -42,9 +43,11 @@ def authorize():
     
     if code:
         token_info = oauth_.request_access_token(code)
-        user = create_user(token_info)
 
-        return redirect(url_for('user', display_name=user['user_info']['id']))
+        user = create_user(token_info)
+        schedule_recently_played(user['user']['id'])
+
+        return redirect(url_for('user', display_name=user['user']['id']))
     else:
         url = oauth_.get_authorization_url(scope)
         return redirect(url)
@@ -58,15 +61,37 @@ def user():
 
 
 @app.route('/job')
-@app.route('/job/<user_id>')
-def job(user_id=None):
+@app.route('/job/<type_>/<id_>')
+def job(type_=None, id_=None):
     title = 'imsignificant! - by Job!'
 
-    if user_id is None:
+    if id_ is None:
         result = 'jobs updated'
         update_jobs()
     else:
-        result = f'run job for {user_id}'
-        scheduler.run_job(f'recently_played_{user_id}')
+        if type_ == 'user':
+            result = f'RUN RECENTLY PLAYED FOR {id_}'
+            scheduler.run_job(f'recently_played_{id_}')
+        elif type_ == 'playlist':
+            result = f'RUN JOB FOR PLAYLIST {id_}'
+            scheduler.run_job(f'playlist_{id_}')
+        else:
+            result = 'NO JOB RUN'
 
     return render_template('job.html', title=title, logo=logo, result=result)
+
+
+@app.route('/test')
+def test():
+    title = 'imsignificant! - Testo'
+    result = 'Done!'
+    return render_template('job.html', title=title, logo=logo, result=result)
+
+
+@app.route('/update')
+def users():
+    for user in mongo.db.users.find({}):
+        mongo.db.users.update_one(
+            {'_id': user['_id']},
+            {'$set': {'playlists': {'watching': []}}, '$rename': {'user_info': 'user'}})
+    return redirect(url_for('index'))
