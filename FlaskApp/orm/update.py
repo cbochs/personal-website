@@ -1,7 +1,7 @@
 from functools import reduce
 from datetime import datetime
 
-from FlaskApp import mongo
+from FlaskApp import mongo, scheduler
 from FlaskApp.orm.fetch import *
 from FlaskApp.orm.find import find_user
 from FlaskApp.orm.util import document_exists
@@ -9,21 +9,40 @@ from pymongo.errors import DuplicateKeyError
 from FlaskApp.formatter.datetime import to_datetime, from_datetime
 
 
+def update_jobs():
+    # temporary fix because when the server restarts idk what to do...
+    mongo.db.jobs.remove({})
+    users = [user for user in mongo.db.users.find({})]
+    for user in users:
+        user_id = user['user_info']['id']
+
+        scheduler.add_job(
+            f'recently_played_{user_id}',
+            update_recently_played, args=[user_id],
+            trigger='cron', minute=0, hour='*/2')
+
+
 def update_recently_played(user_id):
-    print('----- HELLO I AM AN UPDATE -----')
+    print(f'----- UPDATING RECENTLY PLAYED FOR {user_id} -----')
 
     recently_played = fetch_recently_played(user_id)
 
-    try:
-        mongo.db.recently_played.insert(recently_played)
-    except DuplicateKeyError as e:
-        print('ATTEMPTED TO INSERT DUPLICATE PLAY HISTORY')
+    if len(recently_played) > 0:
+        print(f'{len(recently_played)} SONGS FOUND')
+        try:
+            mongo.db.recently_played.insert(recently_played)
+        except DuplicateKeyError as e:
+            print('ATTEMPTED TO INSERT DUPLICATE PLAY HISTORY')
+    else:
+        print('NO RECENT SONGS LISTENED TO')
 
     mongo.db.users.update_one(
         {'user_info.id': user_id},
         {'$set': {'recently_played.last_checked': datetime.utcnow()}})
     
     update_tracks([ph['track'] for ph in recently_played])
+
+    print('----- FINISHED RECENTLY PLAYED -----')
     
     return recently_played
 

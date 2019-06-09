@@ -1,9 +1,10 @@
 import json
 
 from flask import redirect, render_template, request, url_for
-from FlaskApp import app, oauth, scheduler, mongo
+from FlaskApp import app, oauth, scheduler
 from FlaskApp.orm.create import create_user
-from FlaskApp.orm.update import update_recently_played
+from FlaskApp.orm.find import find_user
+from FlaskApp.orm.update import update_jobs
 from FlaskApp.spotify.oauth import SpotifyOAuth
 
 scope = ','.join(['playlist-read-private',
@@ -56,19 +57,16 @@ def user():
     return render_template('user.html', title=title, logo=display_name)
 
 
-@app.route('/test')
-def test():
-    title = 'imsignificant! - Test'
+@app.route('/job')
+@app.route('/job/<user_id>')
+def job(user_id=None):
+    title = 'imsignificant! - by Job!'
 
-    # temporary fix because when the server restarts idk what to do...
-    mongo.db.jobs.remove({})
-    result = users = [user for user in mongo.db.users.find({})]
-    for user in users:
-        user_id = user['user_info']['id']
+    if user_id is None:
+        result = 'jobs updated'
+        update_jobs()
+    else:
+        result = f'run job for {user_id}'
+        scheduler.run_job(f'recently_played_{user_id}')
 
-        scheduler.add_job(
-            f'recently_played_{user_id}',
-            update_recently_played, args=[user_id],
-            trigger='cron', minute=0, hour='*/2')
-
-    return render_template('test.html', title=title, logo=logo, items=result)
+    return render_template('job.html', title=title, logo=logo, result=result)
