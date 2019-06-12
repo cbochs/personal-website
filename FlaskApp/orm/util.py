@@ -11,13 +11,12 @@ def document_exists(collection, query):
 
 def is_token_expired(token_info):
     time = datetime.utcnow().timestamp()
-    return (token_info['expires_at'] - time) < 60
+    return (token_info['expires_at'] - time) < 300
 
 
 def update_token_info(token_info):
     if is_token_expired(token_info):
         token_info = oauth.refresh_access_token(token_info)
-
     return token_info
 
 

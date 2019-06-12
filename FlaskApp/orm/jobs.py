@@ -21,7 +21,7 @@ def schedule_recently_played(user_id):
         scheduler.add_job(
             f'recently_played_{user_id}',
             update_recently_played, args=[user_id],
-            trigger='cron', minute=0, hour='*/2')
+            trigger='cron', minute=0, hour='*/2', jitter=50)
 
 
 def schedule_playlist(playlist_id):
@@ -29,4 +29,4 @@ def schedule_playlist(playlist_id):
         scheduler.add_job(
             f'playlist_{playlist_id}',
             update_playlist, args=[playlist_id],
-            trigger='cron', hour='*/6')
+            trigger='cron', hour='*/6', jitter=50)
