@@ -3,10 +3,26 @@
 {% block content %}
 <section>
   <p>listening history <a class="switch-on" id="recently_played">on</a></p>
-  <p>playlist monitor <a class="switch-off" id="playlist_monitor">off</a></p>
-  <button class="btn" id="btn-playlists">Load Playlists</button>
-  <div class="playlist-container" id="ul-playlists">
-    <ul></ul>
+  <p>discover backup <a class="switch-off" id="playlist_monitor">off</a></p>
+  <button id="btn_recently_played" class="btn">Fetch history</button>
+  <div id="container" class="slider-container invisible">
+    <div class="slider-list">
+      <div class="slider" id="slider"></div>
+      <div class="table-container">
+        <div class="table-scroll">
+          <table class="table" id="table">
+            <thead>
+              <tr>
+                <th><span class="text">Played at</span></th>
+                <th><span class="text">Track</span></th>
+                <th><span class="text">Artists</span></th>
+                <th><span class="text">Album</span></th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 {% endblock %}

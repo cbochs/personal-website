@@ -108,3 +108,50 @@ p {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   font-size: 1rem;
 }
+
+.slider-container {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 7fr 1fr;
+}
+
+.slider-container .slider-list {
+  grid-column: 2 / span 1;
+}
+
+.table-container {
+  margin-top: 2rem;
+  position: relative;
+}
+
+.table-container table {
+  width: 100%;
+  table-layout: fixed;
+  background: white;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+.table-scroll {
+  height: 60vh;
+  margin-top: 1.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.table-scroll table thead tr th .text {
+  position: absolute;
+  z-index: 2;
+  top: -1.5rem;
+  height: 1.5rem;
+}
+
+.table-scroll th, .table-scroll td {
+  padding: 0.5rem 1rem;
+  color: black;
+  vertical-align: top;
+}
+
+.invisible {
+  display: none;
+}

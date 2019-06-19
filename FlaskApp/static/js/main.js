@@ -1,6 +1,15 @@
+const logo = document.querySelector('#logo');
+
 const clickEventType = 'ontouchend' in document ? 'touchstart' : 'click';
 const ulPlaylists = document.querySelector('#ul-playlists');
 const btnLoadPlaylists = document.querySelector('#btn-playlists');
+
+const historyButton = document.querySelector('#btn_recently_played');
+const historyContainer = document.querySelector('#container');
+const historySlider = document.querySelector('#slider');
+const historyList = document.querySelector('#table');
+let recentlyPlayed = [];
+let recentlyPlayedFiltered = [];
 
 function getQueryString(params) {
     const esc = encodeURIComponent;
@@ -11,20 +20,119 @@ function getQueryString(params) {
 
 function request(params) {
     let method = params.method || 'GET';
-    let headers = params.headers || new Headers();
+    let headers = params.headers || {'Content-Type': 'application/json'};
     let qs = '';
     let body;
 
     if (['GET', 'DELETE'].indexOf(method) > -1) {
-        qs = getQueryString(params.data);
+        qs = '?' + getQueryString(params.data);
     } else {
         body = JSON.stringify(params.data);
     }
 
-    let url = `${params.url}?${qs}`;
+    let url = `${params.url}${qs}`;
 
     return fetch(url, { method, headers, body });
 }
+
+function formatTimestamp(ts) {
+    let date = new Date(ts);
+    let year = date.getFullYear();
+    let month = ('0' + (date.getMonth() + 1)).slice(-2);
+    let day = ('0' + date.getDate()).slice(-2);
+
+    return `${year}-${month}-${day}`;
+}
+
+async function fetchRecentlyPlayed(userId) {
+    params = {
+        method: 'POST',
+        url: 'http://192.168.1.222/history',
+        data: { user_id: userId }
+    };
+    
+    let response = await request(params);
+    let result = await response.json();
+
+    recentlyPlayed = result.map(rp => {
+        return {...rp, played_at: new Date(`${rp.played_at} GMT+00:00`)}
+    }).sort().reverse();
+    recentlyPlayedFiltered = recentlyPlayed;
+
+    const DAY_MS = 1000 * 60 * 60 * 24;
+
+    let startTime = recentlyPlayed[0].played_at.getTime();
+    let startTimeInt = startTime - (startTime % DAY_MS);
+
+    let endTime = recentlyPlayed[recentlyPlayed.length - 1].played_at.getTime();
+    let endTimeInt = endTime + (DAY_MS - (endTime % DAY_MS));
+
+    const formatter = {
+        to: (value) => formatTimestamp(value),
+        from: (value) => formatTimestamp(value)
+    };
+
+    noUiSlider.create(slider, {
+        start: [startTimeInt, endTimeInt],
+        step: DAY_MS,
+        margin: DAY_MS,
+        connect: true,
+        range: {
+            'min': startTimeInt,
+            'max': endTimeInt
+        },
+        tooltips: [formatter, formatter]
+    });
+
+    slider.noUiSlider.on('update', (values, handle) => {
+        let startTime = new Date(+values[0]);
+        let endTime = new Date(+values[1]);
+        recentlyPlayedFiltered = recentlyPlayed.filter(rp => {
+            return rp.played_at >= startTime && rp.played_at <= endTime;
+        });
+
+        let rows = recentlyPlayedFiltered.map(rp => {
+            let date = rp.played_at;
+            let year = date.getFullYear();
+            let month = ('0' + (date.getMonth() + 1)).slice(-2);
+            let day = ('0' + date.getDate()).slice(-2);
+            let hours = ('0' + date.getHours()).slice(-2);
+            let minutes = ('0' + date.getMinutes()).slice(-2);
+            let seconds = ('0' + date.getSeconds()).slice(-2);
+
+            date = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return `
+                <tr>
+                    <td>${date}</td>
+                    <td>${rp.track.name}</td>
+                    <td>${rp.track.artists.map(a => a.name).join()}</td>
+                    <td>${rp.track.album.name}</td>
+                </tr>`
+        }).reverse().join('');
+
+        historyList.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Played at</th>
+                    <th>Track</th>
+                    <th>Artists</th>
+                    <th>Album</th>
+                </tr>
+            </thead>
+            ${rows}`;
+    });
+}
+
+function loadRecentlyPlayed(event) {
+    let user_id = logo.innerHTML;
+    fetchRecentlyPlayed(user_id);
+
+    historyButton.classList.toggle('invisible');
+    historyContainer.classList.toggle('invisible');
+
+    console.log(user_id);
+}
+historyButton.addEventListener(clickEventType, loadRecentlyPlayed);
 
 function split_url(url) {
     let parts = url.split('?');
@@ -53,49 +161,3 @@ function toggleActive(event) {
 }
 document.querySelector('#recently_played').addEventListener(clickEventType, toggleActive);
 document.querySelector('#playlist_monitor').addEventListener(clickEventType, toggleActive);
-
-async function clickLoadPlaylists(event) {
-    event.preventDefault();
-
-    const user_id = document.querySelector('#logo').innerHTML;
-    console.log(user_id);
-
-    let url = 'http://www.imsignificant.com:8080';
-    if (window.location.origin.includes('192.168.1.222')) {
-        url = 'http://192.168.1.222';
-    }
-    console.log(url);
-
-    let response = await fetch(`${url}/access_token?user_id=${user_id}`);
-    let result = await response.json();
-    let playlists = await(getPlaylists(result.access_token));
-
-    playlists.forEach(playlist => {
-        let li = document.createElement('li');
-        let textNode = document.createTextNode(playlist);
-        li.appendChild(textNode);
-        ulPlaylists.appendChild(li);
-    });
-
-    btnLoadPlaylists.classList.add('hidden');
-    ulPlaylists.classList.remove('hidden');
-}
-
-async function getPlaylists(access_token) {
-    let response = await request({
-        url: 'https://api.spotify.com/v1/me/playlists',
-        data: { access_token, limit: 50 }});
-    let result = await response.json();
-    let playlists = result['items'];
-
-    while (result['next']) {
-        let params = split_url(result['next']);
-        Object.assign(params.data, { access_token });
-        response = await request(params);
-        result = await response.json();
-        playlists.push(...result['items'])
-    }
-
-    return playlists.map(p => p.name);
-}
-btnLoadPlaylists.addEventListener(clickEventType, clickLoadPlaylists);
