@@ -1,10 +1,10 @@
 import json
 
-from flask import redirect, render_template, request, url_for
+from flask import redirect, render_template, request, url_for, jsonify
 
 from FlaskApp import app, mongo, oauth, scheduler
 from FlaskApp.orm.create import create_user
-from FlaskApp.orm.find import find_user, find_playlist
+from FlaskApp.orm.find import find_user, find_playlist, find_recently_played
 from FlaskApp.orm.jobs import schedule_recently_played, update_jobs
 from FlaskApp.spotify.oauth import SpotifyOAuth
 
@@ -51,6 +51,12 @@ def authorize():
     else:
         url = oauth_.get_authorization_url(scope)
         return redirect(url)
+
+
+@app.route('/history', methods=['POST'])
+def recently_played():
+    data = request.get_json()
+    return jsonify(find_recently_played(**data))
 
 
 @app.route('/user')
