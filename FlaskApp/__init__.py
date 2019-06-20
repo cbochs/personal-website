@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.config.from_envvar('FLASK_CFG')
 app.json_encoder = JSONEncoder
 
-CORS(app)
+CORS(app, resources={r'/history': {'origins': '*'}})
 
 mongo = PyMongo(app)
 
