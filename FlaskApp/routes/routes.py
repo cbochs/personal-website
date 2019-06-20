@@ -1,10 +1,10 @@
 import json
 
-from flask import redirect, render_template, request, url_for, jsonify
+from flask import jsonify, redirect, render_template, request, url_for
 
 from FlaskApp import app, mongo, oauth, scheduler
 from FlaskApp.orm.create import create_user
-from FlaskApp.orm.find import find_user, find_playlist, find_recently_played
+from FlaskApp.orm.find import find_playlist, find_recently_played, find_user
 from FlaskApp.orm.jobs import schedule_recently_played, update_jobs
 from FlaskApp.spotify.oauth import SpotifyOAuth
 
@@ -45,25 +45,21 @@ def authorize():
         token_info = oauth_.request_access_token(code)
 
         user = create_user(token_info)
-        schedule_recently_played(user['user']['id'])
+        user_id = user['user']['id']
 
-        return redirect(url_for('user', display_name=user['user']['id']))
+        schedule_recently_played(user_id)
+
+        return redirect(url_for('user', user_id=user_id))
     else:
         url = oauth_.get_authorization_url(scope)
         return redirect(url)
 
 
-@app.route('/history', methods=['POST'])
-def recently_played():
-    data = request.get_json()
-    return jsonify(find_recently_played(**data))
-
-
 @app.route('/user')
-def user():
+@app.route('/user/<user_id>')
+def user(user_id):
     title = 'imsignificant! - MySpotify'
-    display_name = request.args.get('display_name')
-    return render_template('user.html', title=title, logo=display_name)
+    return render_template('user.html', title=title, logo=user_id)
 
 
 @app.route('/job')
@@ -87,17 +83,7 @@ def job(type_=None, id_=None):
     return render_template('job.html', title=title, logo=logo, result=result)
 
 
-@app.route('/test')
-def test():
-    title = 'imsignificant! - Testo'
-    result = 'Done!'
-    return render_template('job.html', title=title, logo=logo, result=result)
-
-
-@app.route('/update')
-def users():
-    for user in mongo.db.users.find({}):
-        mongo.db.users.update_one(
-            {'_id': user['_id']},
-            {'$set': {'playlists': {'watching': []}}, '$rename': {'user_info': 'user'}})
-    return redirect(url_for('index'))
+@app.route('/history', methods=['POST'])
+def recently_played():
+    data = request.get_json()
+    return jsonify(find_recently_played(**data))

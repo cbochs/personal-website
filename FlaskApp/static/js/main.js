@@ -11,16 +11,32 @@ const historyList = document.querySelector('#table');
 let recentlyPlayed = [];
 let recentlyPlayedFiltered = [];
 
+
+function split_url(url) {
+    let parts = url.split('?');
+    let data = parts[1].split('&').map(arg => arg.split('='));
+
+    url = parts[0];
+    data = Object.assign({}, ...data.map(arg => ({[arg[0]]: arg[1]})))
+    return { url, data }
+}
+
+
 function getQueryString(params) {
+
     const esc = encodeURIComponent;
     return Object.keys(params)
         .map(k => `${esc(k)}=${esc(params[k])}`)
         .join('&');
 }
 
+
 function request(params) {
+
     let method = params.method || 'GET';
-    let headers = params.headers || {'Content-Type': 'application/json'};
+    let headers = params.headers || {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'};
     let qs = '';
     let body;
 
@@ -35,7 +51,9 @@ function request(params) {
     return fetch(url, { method, headers, body });
 }
 
+
 function formatTimestamp(ts) {
+
     let date = new Date(ts);
     let year = date.getFullYear();
     let month = ('0' + (date.getMonth() + 1)).slice(-2);
@@ -44,10 +62,12 @@ function formatTimestamp(ts) {
     return `${year}-${month}-${day}`;
 }
 
+
 async function fetchRecentlyPlayed(userId) {
+
     params = {
         method: 'POST',
-        url: 'http://192.168.1.222/history',
+        url: `http://${window.location.host}/history`,
         data: { user_id: userId }
     };
     
@@ -55,9 +75,15 @@ async function fetchRecentlyPlayed(userId) {
     let result = await response.json();
 
     recentlyPlayed = result.map(rp => {
-        return {...rp, played_at: new Date(`${rp.played_at} GMT+00:00`)}
+        return {...rp, played_at: new Date(rp.played_at)};
     }).sort().reverse();
     recentlyPlayedFiltered = recentlyPlayed;
+}
+
+
+function createRecentlyPlayedSlider() {
+
+    if (!(recentlyPlayedFiltered.length > 0)) return;
 
     const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -66,7 +92,7 @@ async function fetchRecentlyPlayed(userId) {
 
     let endTime = recentlyPlayed[recentlyPlayed.length - 1].played_at.getTime();
     let endTimeInt = endTime + (DAY_MS - (endTime % DAY_MS));
-
+    
     const formatter = {
         to: (value) => formatTimestamp(value),
         from: (value) => formatTimestamp(value)
@@ -74,7 +100,7 @@ async function fetchRecentlyPlayed(userId) {
 
     noUiSlider.create(slider, {
         start: [startTimeInt, endTimeInt],
-        step: DAY_MS,
+        step: DAY_MS / 8,
         margin: DAY_MS,
         connect: true,
         range: {
@@ -123,27 +149,23 @@ async function fetchRecentlyPlayed(userId) {
     });
 }
 
+
 function loadRecentlyPlayed(event) {
+
+    event.preventDefault();
+
     let user_id = logo.innerHTML;
     fetchRecentlyPlayed(user_id);
+    createRecentlyPlayedSlider();
 
     historyButton.classList.toggle('invisible');
     historyContainer.classList.toggle('invisible');
-
-    console.log(user_id);
 }
 historyButton.addEventListener(clickEventType, loadRecentlyPlayed);
 
-function split_url(url) {
-    let parts = url.split('?');
-    let data = parts[1].split('&').map(arg => arg.split('='));
-
-    url = parts[0];
-    data = Object.assign({}, ...data.map(arg => ({[arg[0]]: arg[1]})))
-    return { url, data }
-}
 
 function toggleActive(event) {
+    
     event.preventDefault();
 
     const user_id = document.querySelector('#logo').innerHTML;
@@ -156,8 +178,6 @@ function toggleActive(event) {
         event.target.classList.add('switch-on')
         event.target.innerHTML = 'on'
     }
-
-    console.log(event.target.id);
 }
 document.querySelector('#recently_played').addEventListener(clickEventType, toggleActive);
 document.querySelector('#playlist_monitor').addEventListener(clickEventType, toggleActive);
